@@ -53,6 +53,8 @@ class JsonParser {
     _skipWhitespace();
     if (_match('{')) {
       return _parseObject();
+    } else if (_match('[')) {
+      return _parseArray();
     } else if (_match('"')) {
       return _parseString();
     } else if (_match('t') || _match('f')) {
@@ -62,6 +64,30 @@ class JsonParser {
     } else {
       return _parseNumber();
     }
+  }
+
+  ArrayNode _parseArray() {
+    final start = _currentLocation();
+    _advance(1); // Skip '['
+    _skipWhitespace();
+    final nodes = <ASTNode>[];
+    while (!_match(']')) {
+      _skipWhitespace();
+      final node = _parseValue();
+      nodes.add(node);
+      _skipWhitespace();
+      if (_match(',')) {
+        _advance(1); // Skip ','
+        _skipWhitespace();
+      } else {
+        break;
+      }
+    }
+    _advance(1); // Skip ']'
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
+    return ArrayNode(nodes: nodes, span: span);
   }
 
   ObjectNode _parseObject() {
@@ -173,7 +199,7 @@ class JsonParser {
   }
 
   /// Parses the JSON string into an [ObjectNode].
-  ObjectNode parse() {
-    return _parseObject();
+  ASTNode parse() {
+    return _parseValue();
   }
 }

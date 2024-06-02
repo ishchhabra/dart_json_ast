@@ -1,4 +1,3 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:source_span/source_span.dart';
 
 /// A class that describes a single node in a JSON AST.
@@ -13,8 +12,17 @@ class ASTNode {
   final SourceSpan span;
 }
 
+/// A class that describes a JSON array.
+class ArrayNode extends ASTNode {
+  /// Creates a new [ArrayNode] instance.
+  const ArrayNode({required this.nodes, required super.span})
+      : super(type: 'ArrayNode');
+
+  /// The child nodes of this array.
+  final List<ASTNode> nodes;
+}
+
 /// A class that describes a JSON object.
-@JsonSerializable(explicitToJson: true)
 class ObjectNode extends ASTNode {
   /// Creates a new [ObjectNode] instance.
   const ObjectNode({
@@ -23,12 +31,10 @@ class ObjectNode extends ASTNode {
   }) : super(type: 'ObjectNode');
 
   /// The child nodes of this object.
-  @JsonKey()
   final List<ASTNode> nodes;
 }
 
 /// A class that describes a JSON identifier.
-@JsonSerializable(explicitToJson: true)
 class IdentifierNode extends ASTNode {
   /// Creates a new [IdentifierNode] instance.
   const IdentifierNode({required this.value, required super.span})
@@ -39,19 +45,16 @@ class IdentifierNode extends ASTNode {
 }
 
 /// A class that describes a JSON literal.
-@JsonSerializable(explicitToJson: true)
 class LiteralNode extends ASTNode {
   /// Creates a new [LiteralNode] instance.
   const LiteralNode({required this.value, required super.span})
       : super(type: 'LiteralNode');
 
   /// The value of this literal.
-  @JsonKey()
   final dynamic value;
 }
 
 /// A class that describes a JSON array.
-@JsonSerializable(explicitToJson: true)
 class PropertyNode extends ASTNode {
   /// Creates a new [PropertyNode] instance.
   const PropertyNode({
@@ -64,6 +67,5 @@ class PropertyNode extends ASTNode {
   final IdentifierNode key;
 
   /// The value of this property.
-  @JsonKey()
   final ASTNode value;
 }
