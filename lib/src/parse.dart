@@ -1,4 +1,6 @@
+import 'package:json_ast/src/json_ast.dart';
 import 'package:json_ast/src/models.dart';
+import 'package:source_span/source_span.dart';
 
 /// A class that parses JSON strings into AST.
 class JsonParser {
@@ -18,7 +20,7 @@ class JsonParser {
   int _column;
 
   SourceLocation _currentLocation() {
-    return SourceLocation(line: _line, column: _column);
+    return SourceLocation(_position, line: _line, column: _column);
   }
 
   void _advance(int length) {
@@ -47,7 +49,7 @@ class JsonParser {
     }
   }
 
-  dynamic _parseValue() {
+  ASTNode _parseValue() {
     _skipWhitespace();
     if (_match('{')) {
       return _parseObject();
@@ -69,17 +71,8 @@ class JsonParser {
     final properties = <PropertyNode>[];
     while (!_match('}')) {
       _skipWhitespace();
-      final key = _parseIdentifier();
-      _skipWhitespace();
-      _advance(1); // Skip ':'
-      _skipWhitespace();
-      final value = _parseValue() as ASTNode;
-      final span = SourceSpan(
-        start: start,
-        end: _currentLocation(),
-        text: input.substring(start.line, _position),
-      );
-      properties.add(PropertyNode(key: key, value: value, span: span));
+      final property = _parseProperty();
+      properties.add(property);
       _skipWhitespace();
       if (_match(',')) {
         _advance(1); // Skip ','
@@ -89,12 +82,23 @@ class JsonParser {
       }
     }
     _advance(1); // Skip '}'
-    final span = SourceSpan(
-      start: start,
-      end: _currentLocation(),
-      text: input.substring(start.line, _position),
-    );
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
     return ObjectNode(nodes: properties, span: span);
+  }
+
+  PropertyNode _parseProperty() {
+    final start = _currentLocation();
+    final key = _parseIdentifier();
+    _skipWhitespace();
+    _advance(1); // Skip ':'
+    _skipWhitespace();
+    final value = _parseValue();
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
+    return PropertyNode(key: key, value: value, span: span);
   }
 
   IdentifierNode _parseIdentifier() {
@@ -106,7 +110,9 @@ class JsonParser {
     }
     final value = input.substring(stringStart, _position);
     _advance(1); // Skip closing '"'
-    final span = SourceSpan(start: start, end: _currentLocation(), text: value);
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
     return IdentifierNode(value: value, span: span);
   }
 
@@ -119,7 +125,9 @@ class JsonParser {
     }
     final value = input.substring(stringStart, _position);
     _advance(1); // Skip closing '"'
-    final span = SourceSpan(start: start, end: _currentLocation(), text: value);
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
     return LiteralNode(value: value, span: span);
   }
 
@@ -132,7 +140,9 @@ class JsonParser {
       _advance(1);
     }
     final value = input.substring(numberStart, _position);
-    final span = SourceSpan(start: start, end: _currentLocation(), text: value);
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
     return LiteralNode(value: num.parse(value), span: span);
   }
 
@@ -140,13 +150,15 @@ class JsonParser {
     final start = _currentLocation();
     if (_match('true')) {
       _advance(4);
-      final span =
-          SourceSpan(start: start, end: _currentLocation(), text: 'true');
+      final end = _currentLocation();
+      final text = input.substring(start.offset, end.offset);
+      final span = SourceSpan(start, end, text);
       return LiteralNode(value: true, span: span);
     } else {
       _advance(5);
-      final span =
-          SourceSpan(start: start, end: _currentLocation(), text: 'false');
+      final end = _currentLocation();
+      final text = input.substring(start.offset, end.offset);
+      final span = SourceSpan(start, end, text);
       return LiteralNode(value: false, span: span);
     }
   }
@@ -154,8 +166,9 @@ class JsonParser {
   LiteralNode _parseNull() {
     final start = _currentLocation();
     _advance(4);
-    final span =
-        SourceSpan(start: start, end: _currentLocation(), text: 'null');
+    final end = _currentLocation();
+    final text = input.substring(start.offset, end.offset);
+    final span = SourceSpan(start, end, text);
     return LiteralNode(value: null, span: span);
   }
 
