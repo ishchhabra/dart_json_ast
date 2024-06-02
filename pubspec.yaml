@@ -14,5 +14,5 @@ dev_dependencies:
   very_good_analysis: ^5.1.0
 dependencies:
   json_annotation: ^4.9.0
-  meta: ^1.15.0
+  meta: ^1.11.0
   source_span: ^1.10.0
