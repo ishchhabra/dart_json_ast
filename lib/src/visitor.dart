@@ -17,6 +17,14 @@ class JsonASTVisitor {
   @mustCallSuper
   void visitIdentifierNode(IdentifierNode node) {}
 
+  /// Visits an [ArrayNode].
+  @mustCallSuper
+  void visitArrayNode(ArrayNode arrayNode) {
+    for (final node in arrayNode.nodes) {
+      visitAstNode(node);
+    }
+  }
+
   /// Visits an [ObjectNode].
   @mustCallSuper
   void visitObjectNode(ObjectNode objectNode) {
@@ -35,6 +43,8 @@ class JsonASTVisitor {
   /// Visits a [ASTNode].
   void visitAstNode(ASTNode node) {
     switch (node) {
+      case ArrayNode():
+        visitArrayNode(node);
       case ObjectNode():
         visitObjectNode(node);
       case IdentifierNode():
